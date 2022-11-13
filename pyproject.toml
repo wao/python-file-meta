@@ -6,6 +6,9 @@ authors = ["Chen Yang <yangchen@thinkmore.info>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
+typer = "^0.7.0"
+peewee = "^3.15.4"
+PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
