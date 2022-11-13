@@ -56,9 +56,20 @@ def main( file_name: Path ):
         };
 
     path_info = {
-            "current": md5sum(file_name)
+            "current": md5sum(file_name),
+            "trackable": False,
             }
-            
+    
+    path_of_local = repo.local_path_for(file_name)
+
+    if path_of_local.exists():
+        with path_of_local.open("r") as fd:
+            old_path_info = yaml.safe_load(fd)
+
+        if old_path_info["current"] != md5sum(file_name):
+            print(f"{file_name} is changed, want to track it?")
+            exit(0)
+
 
     with repo.info_path_for(file_name).open("w") as fd:
         yaml.dump(info, fd)
