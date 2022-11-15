@@ -6,6 +6,7 @@ import hashlib
 from enum import Enum
 from dataclasses import dataclass, asdict
 from datetime import datetime
+import time
 
 class Md5sum:
     def __init__(self, md5sum : str):
@@ -33,13 +34,24 @@ class PathHistory:
     time : datetime
     path : Path
 
+@dataclass
+class MetaValue:
+    uid : str
+    mtime : datetime
+    content : str
+
+@dataclass
+class Meta:
+    name : str
+    values : dict[str,MetaValue]
 
 @dataclass
 class ObjectInfo:
     md5sum : Md5sum
     st_size : int
     paths : list[PathHistory]
-    comment : str
+    comments : dict[str,MetaValue]
+    metas : dict[str,Meta]
 
 @dataclass
 class StagingInfo:
@@ -48,6 +60,18 @@ class StagingInfo:
     st_size : int
     st_mtime : float
     st_ctime : float
+
+symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXZYZ0123456789"
+
+def int2sym(value,mod):
+    while value >= mod:
+        value, remind = divmod(value, mod)
+        yield symbols[remind]
+
+def uniqid():
+    value = int(time.time())
+    mod = len(symbols)
+    return "".join(list(int2sym(value,mod)))
 
 
 class RepoFileHelper:
@@ -117,7 +141,7 @@ class RepoFileHelper:
 
         self._object_info = ObjectInfo(self.md5sum, current_stat.st_size, [ 
                 PathHistory( datetime.now(), self._src_file_path.absolute() ),
-            ], "")
+            ], dict(), dict())
 
         with self.staging_path.open("w") as fd:
             yaml.dump( asdict(self._staging_info), fd)
