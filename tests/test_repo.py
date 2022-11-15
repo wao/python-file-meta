@@ -44,3 +44,13 @@ def test_dirty_file(tmp_files, tmp_repo):
         fd.write("hello2")
     assert tmp_repo.query(path) == QueryResult.DIRTY
 
+
+def test_new_name(tmp_files, tmp_repo):
+    path = tmp_files / "old_file"
+    new_path = tmp_files / "new_file"
+    with path.open("w") as fd:
+        fd.write("hello1")
+    tmp_repo.file_helper(path).create_infos()
+    shutil.move(path, new_path)
+    assert tmp_repo.query(new_path) == QueryResult.NEW_NAME
+
