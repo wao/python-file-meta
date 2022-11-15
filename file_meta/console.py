@@ -4,6 +4,7 @@ import os
 from loguru import logger
 import yaml
 import hashlib
+from enum import Enum
 
 #app = typer.Typer()
 
@@ -29,7 +30,7 @@ class Md5sum:
         return self.md5sum == value.md5sum
 
 class ObjectInfo:
-    def __init__(self, md5sum : Md5sum,   ):
+    def __init__(self, md5sum : Md5sum, paths ):
         self.md5sum = md5sum
         self.paths = []
         self.comment = "" 
@@ -94,25 +95,22 @@ class RepoFileHelper:
 
         return self._object_info
 
+    def create_object_info(self):
+        assert not self.has_object_info()
+        return None
 
-class RepoProcessCallback:
-    def on_same_file(self, fh : RepoFileHelper):
-        assert False
 
-    def on_dirty_file(self, fh : RepoFileHelper):
-        assert False
-
-    def on_new_name_for_existing_file(self, fh : RepoFileHelper):
-        assert False
-
-    def on_save_new_file(self, fh : RepoFileHelper):
-        assert False
+class QueryResult(Enum):
+    SAME = 1
+    DIRTY = 2
+    NEW_NAME = 3
+    NEW = 4
 
 class Repo:
     def __init__(self, root_path : Path):
         self.root = root_path
 
-    def process(self, file_name : Path, clt : RepoProcessCallback):
+    def query(self, file_name : Path ):
         #caculate md5sum of file_name
         filehelper = RepoFileHelper.from_file(file_name, self.root)
 
@@ -120,16 +118,16 @@ class Repo:
         if filehelper.has_staging_info():
             #if same md5sum
             if filehelper.staging_info.md5sum == filehelper.md5sum:
-                clt.on_same_file(filehelper)
+                return QueryResult.SAME
             else:
-                clt.on_dirty_file(filehelper)
+                return QueryResult.DIRTY
         else:
             #find same md5sum in repo
             if filehelper.has_object_info():
-                clt.on_new_name_for_existing_file(filehelper)
+                return QueryResult.NEW_NAME
             else:
                 #create a new entry and save all items
-                clt.on_save_new_file(filehelper)
+                return QueryResult.NEW
             
         
 repo = Repo(Path("~/.local/file_meta").expanduser())
@@ -139,21 +137,17 @@ def old_main( file_name: Path ):
         print(f"{file_name} is not a file, can't handle")
         exit(0)
 
-def main( file_name: Path ):
-    class StatusCmdCb(RepoProcessCallback):
-        def on_same_file(self, fh : RepoFileHelper):
-            print("Already saved in repo")
+def status( file_name: Path ):
+    status = repo.query(file_name)
+    if status == QueryResult.NEW:
+        print("New file")
+    elif status == QueryResult.NEW_NAME:
+        print("New name for old file")
+    elif status == QueryResult.DIRTY:
+        print("Dirty file")
+    elif status == QueryResult.SAME:
+        print("Same file")
 
-        def on_dirty_file(self, fh : RepoFileHelper):
-            print("Dirty file")
-
-        def on_new_name_for_existing_file(self, fh : RepoFileHelper):
-            print("Found duplicate")
-
-        def on_save_new_file(self, fh : RepoFileHelper):
-            print("New file, save to repo")
-
-    repo.process(file_name, StatusCmdCb())
 
 def run():
-    typer.run(main)
+    typer.run(status)
