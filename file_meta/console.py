@@ -28,6 +28,12 @@ def status( file_name: Path ):
     if s:
         print(f"{s}   {file_name}")
 
+    fh = repo.file_helper(file_name)
+    if fh.has_object_info():
+        print("Comments")
+
+
+
 @app.command()
 def add( file_name: Path ):
     fh = repo.file_helper(file_name)

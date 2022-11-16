@@ -31,23 +31,18 @@ class Md5sum:
         return self.md5sum == value.md5sum
 
 @dataclass
-class MetaValue:
+class Comment:
     uid : str
     mtime : datetime
     content : str
-
-@dataclass
-class Meta:
-    name : str
-    values : dict[str,MetaValue]
 
 @dataclass
 class ObjectInfo:
     md5sum : Md5sum
     st_size : int
     paths : dict[Path,datetime]
-    comments : dict[str,MetaValue]
-    metas : dict[str,Meta]
+    comments : dict[str,Comment]
+    metas : dict[str,str]
 
 @dataclass
 class StagingInfo:
@@ -135,6 +130,18 @@ class RepoFileHelper:
         self._create_object_info()
         self._create_staging_info()
 
+    def add_comment(self, comment:str):
+        c = Comment(uniqid(), datetime.now(), comment)
+        self.object_info.comments[c.uid] = c
+        self._save_object_info()
+
+    def add_meta(self, meta_name:str, meta_value:str):
+        self.object_info.metas[meta_name] = meta_value
+        self._save_object_info()
+
+    @property
+    def metas(self):
+        return self.object_info.metas
 
     def _create_object_info(self):
         assert not self.has_object_info()
