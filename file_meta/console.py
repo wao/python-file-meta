@@ -31,8 +31,14 @@ def status( file_name: Path ):
     fh = repo.file_helper(file_name)
     if fh.has_object_info():
         print("Comments")
+        print("Metas")
+        for k in fh.metas.items():
+            print(f"{k[0]}={k[1]}")
 
-
+@app.command()
+def meta( file_name : Path, meta_name : str, meta_value : str ):
+    repo.file_helper(file_name).add_meta(meta_name, meta_value)
+    print(f"Set meta {meta_name}={meta_value}")
 
 @app.command()
 def add( file_name: Path ):
