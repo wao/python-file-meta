@@ -7,6 +7,7 @@ from enum import Enum
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import time
+import random
 
 class Md5sum:
     def __init__(self, md5sum : str):
@@ -30,11 +31,6 @@ class Md5sum:
         return self.md5sum == value.md5sum
 
 @dataclass
-class PathHistory:
-    time : datetime
-    path : Path
-
-@dataclass
 class MetaValue:
     uid : str
     mtime : datetime
@@ -49,7 +45,7 @@ class Meta:
 class ObjectInfo:
     md5sum : Md5sum
     st_size : int
-    paths : list[PathHistory]
+    paths : dict[Path,datetime]
     comments : dict[str,MetaValue]
     metas : dict[str,Meta]
 
@@ -61,18 +57,20 @@ class StagingInfo:
     st_mtime : float
     st_ctime : float
 
-symbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXZYZ0123456789"
+symbols = "0123456789abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789"
 
 def int2sym(value,mod):
     while value >= mod:
         value, remind = divmod(value, mod)
         yield symbols[remind]
 
-def uniqid():
+def uniqid2():
     value = int(time.time())
     mod = len(symbols)
     return "".join(list(int2sym(value,mod)))
 
+def uniqid():
+    return "".join(random.choices(symbols, k=12))
 
 class RepoFileHelper:
     def __init__(self, file_path : Path, root_path : Path ):
@@ -134,21 +132,44 @@ class RepoFileHelper:
         assert not self.has_object_info()
         assert not self.has_staging_info()
 
+        self._create_object_info()
+        self._create_staging_info()
+
+
+    def _create_object_info(self):
+        assert not self.has_object_info()
+
+        current_stat = self._src_file_path.stat()
+
+        self._object_info = ObjectInfo(self.md5sum, current_stat.st_size,
+                dict({self._src_file_path.absolute(): datetime.now()}), 
+            dict(), dict())
+
+
+        self._save_object_info()
+
+    def _save_object_info(self):
+        with self.object_path.open("w") as fd:
+            yaml.dump( asdict(self._object_info), fd)
+
+    def _create_staging_info(self):
+        assert not self.has_staging_info()
         current_stat = self._src_file_path.stat()
 
         self._staging_info = StagingInfo( self.md5sum, 
                     current_stat.st_dev, current_stat.st_size, current_stat.st_mtime, current_stat.st_ctime) 
 
-        self._object_info = ObjectInfo(self.md5sum, current_stat.st_size, [ 
-                PathHistory( datetime.now(), self._src_file_path.absolute() ),
-            ], dict(), dict())
-
         with self.staging_path.open("w") as fd:
             yaml.dump( asdict(self._staging_info), fd)
 
-        with self.object_path.open("w") as fd:
-            yaml.dump( asdict(self._object_info), fd)
+    def add_staging_info(self):
+        self._create_staging_info()
 
+        self.object_info.paths[self._src_file_path.absolute()]=datetime.now()
+        self._save_object_info()
+
+    def update_infos(self):
+        pass
 
     def query(self):
         #if find same file_name in repo

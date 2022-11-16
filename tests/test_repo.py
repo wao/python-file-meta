@@ -33,6 +33,7 @@ def test_same_file(tmp_repo):
     assert tmp_repo.query(file_name) == QueryResult.NEW
     tmp_repo.file_helper(file_name).create_infos()
     assert tmp_repo.query(file_name) == QueryResult.SAME
+    assert file_name.absolute() in tmp_repo.file_helper(file_name).object_info.paths
 
 
 def test_dirty_file(tmp_files, tmp_repo):
@@ -45,7 +46,7 @@ def test_dirty_file(tmp_files, tmp_repo):
     assert tmp_repo.query(path) == QueryResult.DIRTY
 
 
-def test_new_name(tmp_files, tmp_repo):
+def test_new_name_and_added(tmp_files, tmp_repo):
     path = tmp_files / "old_file"
     new_path = tmp_files / "new_file"
     with path.open("w") as fd:
@@ -53,4 +54,9 @@ def test_new_name(tmp_files, tmp_repo):
     tmp_repo.file_helper(path).create_infos()
     shutil.move(path, new_path)
     assert tmp_repo.query(new_path) == QueryResult.NEW_NAME
+
+    tmp_repo.file_helper(new_path).add_staging_info()
+    assert tmp_repo.query(new_path) == QueryResult.SAME
+    assert new_path.absolute() in tmp_repo.file_helper(new_path).object_info.paths
+
 
