@@ -40,7 +40,7 @@ def add( file_name: Path ):
         fh.add_staging_info()
         print("Linked")
     elif status == QueryResult.DIRTY:
-        fh.update_infos()
+        fh.replace_infos()
         print("Replaced")
     else:
         print("Do nothing")

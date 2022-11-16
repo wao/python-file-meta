@@ -154,22 +154,36 @@ class RepoFileHelper:
 
     def _create_staging_info(self):
         assert not self.has_staging_info()
+        self._replace_staging_info()
+        
+    def _replace_staging_info(self):
         current_stat = self._src_file_path.stat()
 
         self._staging_info = StagingInfo( self.md5sum, 
                     current_stat.st_dev, current_stat.st_size, current_stat.st_mtime, current_stat.st_ctime) 
+        self._save_staging_info()
 
+
+    def _save_staging_info(self):
         with self.staging_path.open("w") as fd:
             yaml.dump( asdict(self._staging_info), fd)
 
     def add_staging_info(self):
         self._create_staging_info()
+        self._add_path_to_object_info()
 
+
+    def _add_path_to_object_info(self):
         self.object_info.paths[self._src_file_path.absolute()]=datetime.now()
         self._save_object_info()
 
-    def update_infos(self):
-        pass
+    def replace_infos(self):
+        assert self.md5sum != self.staging_info.md5sum
+        self._replace_staging_info()
+        if self.has_object_info():
+            self._add_path_to_object_info()
+        else:
+            self._create_object_info()
 
     def query(self):
         #if find same file_name in repo
