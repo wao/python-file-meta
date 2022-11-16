@@ -34,11 +34,16 @@ def add( file_name: Path ):
     status = fh.query()
     if status == QueryResult.NEW:
         fh.create_infos()
+        print("Added")
     elif status == QueryResult.NEW_NAME:
         #detect move???
         fh.add_staging_info()
+        print("Linked")
     elif status == QueryResult.DIRTY:
         fh.update_infos()
+        print("Replaced")
+    else:
+        print("Do nothing")
 
 
 def run():
