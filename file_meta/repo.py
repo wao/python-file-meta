@@ -65,7 +65,7 @@ def uniqid2():
     return "".join(list(int2sym(value,mod)))
 
 def uniqid():
-    return "".join(random.choices(symbols, k=12))
+    return "".join(random.choices(symbols, k=6))
 
 class RepoFileHelper:
     def __init__(self, file_path : Path, root_path : Path ):
