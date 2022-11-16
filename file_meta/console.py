@@ -23,7 +23,7 @@ def status( file_name: Path ):
     elif status == QueryResult.DIRTY:
         s = "M"
     elif status == QueryResult.SAME:
-        s = None
+        s = "S" 
 
     if s:
         print(f"{s}   {file_name}")
@@ -36,7 +36,7 @@ def add( file_name: Path ):
         fh.create_infos()
     elif status == QueryResult.NEW_NAME:
         #detect move???
-        fh.create_staging_info()
+        fh.add_staging_info()
     elif status == QueryResult.DIRTY:
         fh.update_infos()
 
