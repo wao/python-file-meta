@@ -1,6 +1,6 @@
 import typer
 from pathlib import Path
-from file_meta.repo import Repo, QueryResult, uniqid
+from file_meta.repo import Repo, QueryResult, uniqid, Comment
 
 app = typer.Typer()
 
@@ -33,6 +33,12 @@ def status( file_name: Path ):
         print("Tags")
         print(",".join(list(fh.tags)))
         print("Comments")
+        #for comment in fh.comments.values():
+            #print(comment)
+        for comment in sorted(fh.comments.values(), key=lambda comment: comment["mtime"]):
+            print( f"{comment['uid']} at {comment['mtime']}:")
+            print( f"  {comment['content']}")
+
         print("Metas")
         for k in fh.metas.items():
             print(f"{k[0]}={k[1]}")
@@ -49,6 +55,12 @@ def tag( file_name : Path, tags : list[str] ):
         fh.add_tag(tag)
 
     print(f"Add tag(s) {tags}")
+
+@app.command()
+def comment( file_name : Path, words : list[str] ):
+    comment = " ".join(words)
+    fh = repo.file_helper(file_name).add_comment(comment)
+    print(f"Add comment {comment}")
 
 
 @app.command()

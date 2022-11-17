@@ -152,6 +152,10 @@ class RepoFileHelper:
     def tags(self):
         return self.object_info.tags
 
+    @property
+    def comments(self):
+        return self.object_info.comments
+
 
     def _create_object_info(self):
         assert not self.has_object_info()
