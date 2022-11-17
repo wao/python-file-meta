@@ -59,7 +59,6 @@ def test_new_name_and_added(tmp_files, tmp_repo):
     assert tmp_repo.query(new_path) == QueryResult.SAME
     assert new_path.absolute() in tmp_repo.file_helper(new_path).object_info.paths
 
-
 def test_meta_vars(tmp_files, tmp_repo):
     path = tmp_files / "dirty_file"
     with path.open("w") as fd:
@@ -70,3 +69,16 @@ def test_meta_vars(tmp_files, tmp_repo):
     tmp_repo.file_helper(path).add_meta("url", "www.google.com")
 
     assert tmp_repo.file_helper(path).metas["url"] == "www.google.com"
+
+def test_tag(tmp_files, tmp_repo):
+    path = tmp_files / "dirty_file"
+    with path.open("w") as fd:
+        fd.write("hello1")
+    tmp_repo.file_helper(path).create_infos()
+
+    assert not "url" in tmp_repo.file_helper(path).tags
+
+    tmp_repo.file_helper(path).add_tag("url")
+
+    assert "url" in tmp_repo.file_helper(path).tags
+

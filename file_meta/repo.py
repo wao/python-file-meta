@@ -4,7 +4,7 @@ from loguru import logger
 import yaml
 import hashlib
 from enum import Enum
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 import time
 import random
@@ -43,6 +43,7 @@ class ObjectInfo:
     paths : dict[Path,datetime]
     comments : dict[str,Comment]
     metas : dict[str,str]
+    tags : set[str] = field(default_factory=set)
 
 @dataclass
 class StagingInfo:
@@ -139,9 +140,18 @@ class RepoFileHelper:
         self.object_info.metas[meta_name] = meta_value
         self._save_object_info()
 
+    def add_tag(self, tag:str):
+        self.object_info.tags.add(tag)
+        self._save_object_info()
+
     @property
     def metas(self):
         return self.object_info.metas
+
+    @property
+    def tags(self):
+        return self.object_info.tags
+
 
     def _create_object_info(self):
         assert not self.has_object_info()
@@ -150,7 +160,7 @@ class RepoFileHelper:
 
         self._object_info = ObjectInfo(self.md5sum, current_stat.st_size,
                 dict({self._src_file_path.absolute(): datetime.now()}), 
-            dict(), dict())
+                set(), dict(), dict())
 
 
         self._save_object_info()

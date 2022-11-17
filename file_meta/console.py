@@ -30,6 +30,8 @@ def status( file_name: Path ):
 
     fh = repo.file_helper(file_name)
     if fh.has_object_info():
+        print("Tags")
+        print(",".join(list(fh.tags)))
         print("Comments")
         print("Metas")
         for k in fh.metas.items():
@@ -39,6 +41,15 @@ def status( file_name: Path ):
 def meta( file_name : Path, meta_name : str, meta_value : str ):
     repo.file_helper(file_name).add_meta(meta_name, meta_value)
     print(f"Set meta {meta_name}={meta_value}")
+
+@app.command()
+def tag( file_name : Path, tags : list[str] ):
+    fh = repo.file_helper(file_name)
+    for tag in tags:
+        fh.add_tag(tag)
+
+    print(f"Add tag(s) {tags}")
+
 
 @app.command()
 def add( file_name: Path ):
